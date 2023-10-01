@@ -8,6 +8,11 @@ output: pdf_document
 toc: true
 ---
 
+# Team Members
+1. rjdharmc (Rahul Jain)
+2. margree  (Mark Green)
+3. sahdhin (Sahil Dhingra)
+
 # Introduction
 
 Phish^[https://en.wikipedia.org/wiki/Phish] is an immensely popular jam band from Vermont who have been playing together since 1984. Jam bands are a type of rock and roll band that focus on an improvisational play style, similar to Jazz, such that the musicians do not pre-plan the songs they will play during a show. In this way, the songs played at a given show are pseudo-randomly chosen. *Pseudo-random* because sometimes there are constraints which might influence the playing of a song, such as temporal frequency (not playing the same song on two back-to-back shows) or positional sequencing (songs which are often played in sequence with one another). 
