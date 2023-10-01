@@ -10,13 +10,13 @@ toc: true
 
 # Introduction
 
-[Phish](https://en.wikipedia.org/wiki/Phish) is an immensely popular jam band from Vermont who have been playing together since 1984. Jam bands are a type of rock and roll band that focus on an improvisational play style, similar to Jazz, such that the musicians do not pre-plan the songs they will play during a show. In this way, the songs played at a given show are pseudo-randomly chosen. *Pseudo-random* because sometimes there are constraints which might influence the playing of a song, such as temporal frequency (not playing the same song on two back-to-back shows) or positional sequencing (songs which are often played in sequence with one another). 
+Phish^[https://en.wikipedia.org/wiki/Phish] is an immensely popular jam band from Vermont who have been playing together since 1984. Jam bands are a type of rock and roll band that focus on an improvisational play style, similar to Jazz, such that the musicians do not pre-plan the songs they will play during a show. In this way, the songs played at a given show are pseudo-randomly chosen. *Pseudo-random* because sometimes there are constraints which might influence the playing of a song, such as temporal frequency (not playing the same song on two back-to-back shows) or positional sequencing (songs which are often played in sequence with one another). 
 
-Utilizing a [public API](https://docs.phish.net/) of historical song and setlist data, previous works have investigated the [network relationships](https://github.com/greenmmq/PhishSongNetwork) between songs from their past co-appearances, and applied a recurrent neural network architecture with word2vec embeddings to [predict the next song in a sequence](https://towardsdatascience.com/predicting-what-song-phish-will-play-next-with-deep-learning-947ccce3824d) with up to 21.8% validation accuracy. 
+Utilizing a public API^[https://docs.phish.net/] of historical song and setlist data, previous works have investigated the network relationships^[https://github.com/greenmmq/PhishSongNetwork] between songs from their past co-appearances, and applied a recurrent neural network architecture with word2vec embeddings to predict the next song in a sequence^[https://towardsdatascience.com/predicting-what-song-phish-will-play-next-with-deep-learning-947ccce3824d] with up to 21.8% validation accuracy. 
 
 # Proposal
 
-As of 2022, music streaming is an [\~18 Billion dollar](https://www.weforum.org/agenda/2023/03/charted-the-impact-of-streaming-on-the-music-industry/) industry. Music recommendation is a key differentiator for streaming platforms and neural networks play a central role in accomplishing this task. Traditional music recommendation systems often include user data as input variables to the recommendation model or may recommend songs from multiple similar, but different, bands or genres; however, this approach may not be effective for "dedicated fans" - a subset of users whose listening habits tend to be more focused around an individual band and their compositional tendencies. 
+As of 2022, music streaming is an \~18 Billion dollar industry^[https://www.weforum.org/agenda/2023/03/charted-the-impact-of-streaming-on-the-music-industry/]. Music recommendation is a key differentiator for streaming platforms and neural networks play a central role in accomplishing this task. Traditional music recommendation systems often include user data as input variables to the recommendation model or may recommend songs from multiple similar, but different, bands or genres; however, this approach may not be effective for "dedicated fans" - a subset of users whose listening habits tend to be more focused around an individual band and their compositional tendencies. 
 
 This project proposes to construct a neural network model to learn the compositional tendencies of an artist from historical song and setlist data to predict future setlists and song appearances. In doing so, this neural network will provide a novel mechanism by which songs can be better recommended to music streaming users with musical tastes dedicated to a particular artist or band.
 
@@ -37,9 +37,9 @@ Report Production | | | X
 
 The approach will use the `Keras` API for `Tensorflow`. Here are some goals:
 
-1. **Option 1**: Recreate the experiments performed by similar previous [deep learning explorations](https://github.com/andrewrreed/phish-setlist-modeling/tree/master) on these data.
+1. **Option 1**: Recreate the experiments performed by similar previous deep learning explorations^[https://github.com/andrewrreed/phish-setlist-modeling/tree/master] on these data.
 2. **Option 2**: Improve upon these methods with different problem statement, feature engineering layers, neural network architectures, and hyperparameter tunings to improve prediction performance. 
-3. **Option 3**: Leverage the implicit graph structure of the relationships between songs and setlists over time to implement a [graph neural network](https://proceedings.neurips.cc/paper/2020/file/ba95d78a7c942571185308775a97a3a0-Paper.pdf) to improve prediction performance. 
+3. **Option 3**: Leverage the implicit graph structure of the relationships between songs and setlists over time to implement a graph neural network^[https://proceedings.neurips.cc/paper/2020/file/ba95d78a7c942571185308775a97a3a0-Paper.pdf] to improve prediction performance. 
 
 ## Projected Timeline
 
@@ -78,6 +78,4 @@ gantt
     Presentation DUE                 :crit, milestone, v3, 2023-12-11, 0d
 
 ```
-
-![Gantt chart outlining the projected timeline to complete the project.](images/blank.png)
 
