@@ -1,17 +1,12 @@
 ---
 title: Deep Learning to Predict Phish Setlists
-subtitle: Proposal DRAFT
-author: Rahul Jain, Sahil Dhingra, Mark Green
-date: Spring 2023
+subtitle: DRAFT Proposal
+author: Rahul Jain (rjdharmc), Sahil Dhingra (sahdhin), Mark Green (margree)
+date: Fall 2023
 geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
 output: pdf_document
 toc: true
 ---
-
-# Team Members
-1. rjdharmc (Rahul Jain)
-2. margree  (Mark Green)
-3. sahdhin (Sahil Dhingra)
 
 # Introduction
 
