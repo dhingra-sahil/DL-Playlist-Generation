@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "phishsongprediction"
+version = "0.1.0"
+description = "predict phish songs based on historical data"
+authors = ["greenmmq <mark@greenpnw.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "<3.12,>=3.9"
+numpy = "^1.26.1"
+pandas = "^2.1.1"
+tensorflow = "^2.14.0"
+ipykernel = "^6.25.2"
+tqdm = "^4.66.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
