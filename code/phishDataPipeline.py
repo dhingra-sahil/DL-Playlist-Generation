@@ -4,9 +4,7 @@
 ### too many or too large API calls and the app will be shutdown by API admin
 
 import json
-import numpy as np
 import pandas as pd
-from pprint import pprint
 import requests
 from tqdm import tqdm
 
