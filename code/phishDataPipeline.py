@@ -8,11 +8,10 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-print("Getting Setlist Data...")
 # songNetwork API Key - get one for free on: https://phish.net/api
-apiKey = '1512F21F881B46EA6528' 
+apiKey = '1512F21F881B46EA6528'
 
-# get song data
+print("Getting song data...")
 songLink = 'https://api.phish.net/v5/songs.json?apikey='+apiKey
 songFile = requests.get(songLink)
 songData = json.loads(songFile.text)['data']
@@ -24,13 +23,13 @@ songDF = pd.DataFrame({
     'debut': [ s['debut'] for s in songData ]
 })
 
-# get show data
+print("Getting show data...")
 showLink = 'https://api.phish.net/v5/shows.json?apikey='+apiKey
 showFile = requests.get(showLink)
 showDict = json.loads(showFile.text)['data']
 allPhishShows = [ int(sh['showid']) for sh in showDict if sh['artistid']=='1' ]
 
-# get setlist data
+print("Getting setlist data...")
 setLink = 'https://api.phish.net/v5/setlists.json?apikey='+apiKey
 setFile = requests.get(setLink)
 setDict = json.loads(setFile.text)['data']
@@ -64,16 +63,28 @@ for showid in tqdm(allPhishShows):
         d for d in setDict if 'showid' in d and int(d['showid'])==showid
     ]
     for k,v in setKeys.items():
-        if k=='showlength': fullSet[k] = [len(setlist)]*len(setlist)
-        else: fullSet[k] = [ v(d.get(k)) for d in setlist ]
+        if k=='showlength':
+            fullSet[k] = [len(setlist)]*len(setlist)
+        else:
+            fullSet[k] = [ v(d.get(k)) for d in setlist ]
     if any(None in v for v in fullSet.values()):
-        continue  #skips sets with incomplete information
+        continue  # skips sets with incomplete information
     else:
         allPhishSets = {
             k: allPhishSets.get(k, []) + fullSet.get(k, []) for k in setKeys
         }
 
-allPhishDF = pd.DataFrame(data=allPhishSets).merge(songDF,on='songid',how='left')
+allPhishDF = pd.DataFrame(data=allPhishSets)
+
+# only include "full" shows with 2 sets and an encore
+completeSets = allPhishDF.groupby(by=['showdate', 'set'])\
+                         .size()\
+                         .reset_index(name='Count')\
+                         .pivot(index='showdate',columns='set',values='Count')\
+                         .dropna(subset=['1', '2', 'e'])
+
+allPhishDF = allPhishDF[allPhishDF['showdate'].isin(completeSets.index)]
+allPhishDF = allPhishDF.merge(songDF,on='songid',how='left')
 
 with open('../data/allphishsets.json', 'w') as file:
     file.write(json.dumps(allPhishDF.to_dict(orient='list')))
