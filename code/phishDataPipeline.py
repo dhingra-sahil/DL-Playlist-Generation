@@ -55,7 +55,7 @@ setKeys = {
 print('Parsing setlist data...')
 
 # this parses the setlists into a dataframe indexed by song
-# setlist withs missing keys/values are excluded
+# setlist with missing keys/values are excluded
 allPhishSets = { k:[] for k in setKeys.keys() }
 for showid in tqdm(allPhishShows):
     fullSet = {}
@@ -86,7 +86,8 @@ completeSets = allPhishDF.groupby(by=['showdate', 'set'])\
 allPhishDF = allPhishDF[allPhishDF['showdate'].isin(completeSets.index)]
 allPhishDF = allPhishDF.merge(songDF,on='songid',how='left')
 
-with open('../data/allphishsets.json', 'w') as file:
-    file.write(json.dumps(allPhishDF.to_dict(orient='list')))
+allPhishDF.to_csv('../data/allphishsets.csv', index=False)
+# with open('../data/allphishsets.json', 'w') as file:
+#     file.write(json.dumps(allPhishDF.to_dict(orient='list')))
 
 print("Complete!")
