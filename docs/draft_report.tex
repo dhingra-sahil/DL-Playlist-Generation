@@ -7,7 +7,7 @@
 
 
 % ready for submission
-\usepackage[final]{neurips_2023}
+\usepackage[preprint]{neurips_2023}
 
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
@@ -34,7 +34,7 @@
 \usepackage{xcolor}         % colors
 
 
-\title{Predicting Song Sequences with RNNs and Attention}
+\title{Small Language Modelling for Song Sequence Generation}
 
 
 % The \author macro works with any number of authors. There are two commands
@@ -74,13 +74,121 @@
 
 
 \begin{abstract}
-  The abstract paragraph should be indented \nicefrac{1}{2}~inch (3~picas) on
-  both the left- and right-hand margins. Use 10~point type, with a vertical
-  spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
-  bold, and in point size 12. Two line spaces precede the abstract. The abstract
-  must be limited to one paragraph.
+  Large Language Models (LLMs) such as GPT and BERT have led to revolutionary advances in language applications such as machine translation, sentiment analysis, and text generation. However, these models rely on enormous datasets of texts derived from spoken language which are prohibitively resource-intensive to train. Although pre-trained models solve this to a degree, their scope is limited to the pre-trained spoken language so they cannot be applied to more niche language modeling tasks. This paper explores the application of neural networks for small language modelling where the dataset is small in both size and vocabulary and is composed of non-spoken language “words”. Specifically, this approach explores the music of the band Phish, leveraging historical song appearances and setlists from their shows to model the band's performance tendencies. By decoding intricate patterns from their extensive performance history using a targeted small language model, this approach offers a unique solution for personalized music recommendations. The research aims to enhance the user experience for dedicated fans with more artist-centric music recommendation systems and to test the performance of neural network language models for small, niche applications.
 \end{abstract}
 
+\section{Introduction}
+
+Phish, the iconic jam band hailing from Vermont since 1984, has captivated audiences with their improvisational rock and roll style, reminiscent of Jazz. Notably, their performances stand out for the absence of pre-planned setlists, creating a pseudo-random selection of songs during shows. This unique approach, while spontaneous, is subtly influenced by constraints like temporal frequency and positional sequencing. 
+
+In the pursuit of unraveling the intricate dynamics of Phish's musical repertoire, previous endeavors have tapped into a public API providing access to historical song and setlist data. These initiatives, showcased in works exploring network relationships between songs, have employed advanced techniques such as recurrent neural networks (RNN) with word2vec embeddings. Notably, these studies have achieved a validation accuracy of up to ~ 21\%, showcasing the potential of leveraging data-driven methodologies to predict the next song in a sequence. 
+
+This paper extends this trajectory by proposing a novel exploration into the world of artist-centric music recommendation systems, specifically tailored for dedicated fans. Drawing inspiration from Phish's improvisational ethos, our research endeavors to shed light on the compositional tendencies of the band. Through the application of cutting-edge neural network models, we aim to predict future setlists and song appearances, offering a fresh perspective on music streaming recommendations.
+
+\section{Related Work}
+
+We attempted to reproduce the original experiment from Nov 2019 with latest dataset (from Dec 2023). The best model (with 2 LSTM layers) identified by the author was selected and performed a grid search with 50 and 150 sequence length. None of the models from grid search performed well with the Dec 2023 dataset. The validation loss after a few epochs vanished which indicates the model was cursed with gradient exploding problem. Another interesting observation was that the model would saturate in a few epochs even with different LSTM units and dropout rates. This indicates that the model used in original experiment was overfitting the data then hence not able to generalize when tried with latest data. The highest validation accuracy observed was approx. 12\% which is less than the originally reported accuracy of 21\%.  
+
+In summary, the lesson learnt was just the sequence of songs was not enough to predict the song sequences, how more context and data is needed to obtain meaningful inference. 
+
+\section{Data Acquisition and Preparation}
+
+For the acquisition of Phish concert data crucial to our predictive modeling endeavors, we adopt a methodical approach employing the Phish.net API. Armed with a unique API key provided by Phish.net, our initial focus centers on ingesting song-related details, encompassing song ID, artist, play frequency, last performance date, and debut date. Further, we meticulously filter shows attributed exclusively to Phish, forming a chronological compendium of their extensive concert history. The parsing of setlist data follows, extracting intricate details such as show date, set number, song position, ID, name, transition markers, gap since the last performance, and song categorization. Ensuring the integrity of our dataset, we eliminate incomplete information, resulting in a comprehensive Data Frame. This curated dataset, exclusively featuring "full" shows with two sets and an encore, serves as the foundational bedrock for our subsequent predictive modeling endeavors, poised to unveil patterns within Phish's musical evolution.
+
+In the initial phase of data preprocessing for the Phish concert dataset, we conducted an insightful exploration to understand the diversity of songs. Statistical analyses were performed to calculate and present the distribution. To address the challenge posed by rarely performed songs, we consolidated songs with one or two performances into a unified category termed "wildcard." This involved reassigning identifiers (songid=0) and labels ('wildcard') for streamlined modeling. 
+
+Furthermore, for predictive modeling, we systematically aggregated songs into sequences by grouping them based on show date and set number. These sequences were then concatenated into a unified string labeled as "full" and aggregated by show date. This preprocessing step refines the dataset and establishes a structured framework for developing models focused on predicting Phish setlists. 
+
+\section{Procedures}
+
+These sections review the scope of experiments performed as part of this work. 
+
+\subsection{Interpretting Song Sequences as Language}
+
+Our data frame attribute “full” contains the songs from each concert. To prepare the data for tokenization the raw song data underwent a series of essential steps. Initially, the songs were tokenized, a process involving the division of the songs into individual words. This tokenization was accomplished by splitting the songs using the song delimiter ("|"), and additionally, as multi word songs had dashes, any occurrences of dashes were removed from the words. Subsequently, to establish a robust foundation for numerical representation, a vocabulary was constructed by compiling the unique set of words derived from all the songs. This vocabulary creation ensures that each word in the dataset possesses a distinct numerical identifier.  This indexing facilitated the creation of a mapping between words and their corresponding numerical representations, paving the way for numerical encoding.  
+
+This numerical conversion transforms the raw song data into a structured format suitable for input into a neural network model 
+
+Since our model has to predict either nth or next n songs, we employed multiple experimental splits and training models for each provides a comprehensive analysis of the model's performance under various conditions. The sequential split (Method 1) captures the immediate temporal dependencies within the songs. The time-based split (Method 2) considers the evolving nature of song sequences over time. The unified encoding approach (Method 3) offers insights into the global patterns and relationships across the entire song repertoire. This multi-faceted evaluation ensures a robust understanding of the model's predictive capabilities and generalizability across different scenarios.
+
+\subsection{Models}
+
+Since we are dealing with the sequential aspect of the data, we are using the RNN LSTM model so that model can retain the sequential information for prediction. For experiments, we used both Uni and Bi-directional models.
+
+\subsubsection{Unidirectional LSTM with N-Dimensional Embedding}
+
+The initial model architectures includes an Embedding layer to represent songs numerically, two Long Short-Term Memory (LSTM) layers for capturing sequential dependencies, dropout for regularization, and a Dense layer with softmax activation for multi-class classification. The model is trained on variable-length input sequences of songs, and the Embedding layer allows it to learn meaningful representations for each song. The use of masking ensures proper handling of sequences with varying lengths. This RNN architecture aims to effectively capture the temporal patterns in the dataset, enabling it to make accurate predictions about the next song in each sequence.
+
+\subsubsection{Bidirectional LSTM with N-grams and Adjacency Matrix Embedding}
+
+An N-gram sequencing approach was attempted to focus the LSTM model on the long-term sequencing of songs. Although similar to the previous sequence-to-token approach, the N-gram tokenization splits a given setlist into as many vectors as it contains songs and set markers. Each of these vectors is composed of a padded sequence of 0s and an increasing number of songs and set markers from the set list. For example: the first vector is composed of just "set-1", the next also contains the 1st song, and the next also contains the first and second song – etc. In this way, each sequence is composed of N tokens (the N-grams) which are used to predict the next target token.  
+
+In addition to using the N-gram pre-processing technique, this method embeds the tokens using their co-occurrence matrix. This co-occurrence matrix is given by the LaPlace-smoothed adjacency matrix of the directed graph created by overlaying all the setlists as walks. In this graph, each song is a node, and each song transition contributes to a directed weighted edge.  
+
+Bi-directional LSTM is also employed – although the setlists are unidirectional sequences, this methodology looks for patterns more wholistically. A feed forward layer is used to compute the final output, with softmax activation. 
+
+\subsubsection{Self-Attention Model with N-d + Positional Embedding}
+
+In contrast to the sequence-to-token models attempted with the LSTM architectures, sequence-to-sequence models are attempted with multi-head attention architectures. These models process the song sequence inputs and targets into offset pairs, where the original sequence is broken down into 1..N-1 tokens for the input sequence and 2..N tokens for the output sequence. The token sequences are encoded into an embedding layer composed of the sum of a learned N-dimensional vector embedding layer and a positional embedding layer. The positional embedding layer applies sine and cosine functions for fixed positional encodings.  
+
+The model architecture itself is similar to the decoder-only transformer used in the GPT-2 model. It consists of a causal self-attention layer using masked multi-head attention to attend to the sequencing. This layer is added and normalized, then passed to a feed forward layer to form the Transformer block. These transformer blocks are then layered sequentially and an additional feed forward layer computes the final output, then activated by softmax. 
+
+\subsubsection{Self-Attention + Cross-Attention Model with N-d + Positional Embedding}
+
+This final model is setup similarly to the original transformer model proposed in "Attention is all you need”. The sequence of songs concatenated from the previous 5 setlists are used as the context for the global self-attention layer, which is passed to the decoder via the cross-attention layer.  
+
+\section{Results}
+
+Summary of the Results.
+
+\begin{table}
+	\caption{Sample table title}
+	\label{results-table}
+	\centering
+	\begin{tabular}{lll}
+		\toprule
+		\multicolumn{2}{c}{Part}                   \\
+		\cmidrule(r){1-2}
+		Name     & Description     & Size ($\mu$m) \\
+		\midrule
+		Dendrite & Input terminal  & $\sim$100     \\
+		Axon     & Output terminal & $\sim$10      \\
+		Soma     & Cell body       & up to $10^6$  \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\section{Discussion}
+
+Discussion of what was accomplished. 
+
+\section{Conclusion}
+
+Some concluding words. 
+
+The code we used to acquire and process the dataset, train and evaluate our models is available at \url{https://github.iu.edu/rjdharmc/dlProject}. Note that access to this codebase will require an active account on the IU Enterprise Github instance.
+
+\section*{References}
+
+{
+	\small
+	
+	
+	[1] Alexander, J.A.\ \& Mozer, M.C.\ (1995) Template-based algorithms for
+	connectionist rule extraction. In G.\ Tesauro, D.S.\ Touretzky and T.K.\ Leen
+	(eds.), {\it Advances in Neural Information Processing Systems 7},
+	pp.\ 609--616. Cambridge, MA: MIT Press.
+	
+	
+	[2] Bower, J.M.\ \& Beeman, D.\ (1995) {\it The Book of GENESIS: Exploring
+		Realistic Neural Models with the GEneral NEural SImulation System.}  New York:
+	TELOS/Springer--Verlag.
+	
+	
+	[3] Hasselmo, M.E., Schnell, E.\ \& Barkai, E.\ (1995) Dynamics of learning and
+	recall at excitatory recurrent synapses and cholinergic modulation in rat
+	hippocampal region CA3. {\it Journal of Neuroscience} {\bf 15}(7):5249-5262.
+}
 
 \section{Submission of papers to NeurIPS 2023}
 
