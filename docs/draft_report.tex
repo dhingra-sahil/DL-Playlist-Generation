@@ -8,6 +8,7 @@
 
 % ready for submission
 \usepackage[preprint]{neurips_2023}
+\usepackage{graphicx}
 
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
@@ -79,19 +80,15 @@
 
 \section{Introduction}
 
-As of 2022, music streaming is an \$18 Billion dollar industry\footnote{\url{https://www.weforum.org/agenda/2023/03/charted-the-impact-of-streaming-on-the-music-industry/}}. Playlist generation is a key differentiator for streaming platforms and previous works have used reinforcement learning [1], convolutional neural networks (CNNs) [2], and recurrent neural networks (RNNs) [3] as the generative mechanisms. These works have generally spanned a broad scope of artists and genres to generate playlists composed of multiple bands or band-specific playlists ordered on an arbitrary learned feature. While this may work well for a generic music listener, this approach may not be effective for "dedicated fans" - a subset of users whose listening habits tend to be more focused around an individual band and their compositional tendencies. 
+As of 2022, music streaming is an \$18 Billion dollar industry.\footnote{\url{https://www.weforum.org/agenda/2023/03/charted-the-impact-of-streaming-on-the-music-industry/}} Playlist generation is a key differentiator for streaming platforms and previous works have used reinforcement learning [1], convolutional neural networks (CNNs) [2], and recurrent neural networks (RNNs) [3] as the generative mechanisms. These works have generally spanned a broad scope of artists and genres to generate playlists composed of multiple bands or band-specific playlists ordered on an arbitrary learned feature. While this may work well for a generic music listener, this approach may not be effective for "dedicated fans" - a subset of users whose listening habits tend to be more focused around an individual band and their compositional tendencies. 
 
 One such type of “dedicated fan” are those followers of Jam bands. Since the 1960s, Jam bands have captivated audiences with their improvisational Rock and Roll style, reminiscent of Jazz. Notably, these groups do not pre-plan setlists for their live performances and instead weave together a pseudo-random selection of songs such that no two shows are alike. The choice of songs for each show is partially influenced by spontaneous notions such as crowd energy or a band member’s mood, but it is also influenced by constraints like temporal frequency and positional sequencing. These shows also generally follow a standard pattern composed of two sets separated by an intermission and a brief encore composed of just a song or two. Beyond the music itself, the sequencing of songs in shows is reminiscent of natural language – song names are analogous to words, setlists to sentences, show starts and stops to parts-of-speech – with the repertoire of each band forming its own unique language full of syntactical intricacies.  
 
-We purport that constructing small language models from the song sequences of live performances to generate playlists for a given band could increase the engagement of “dedicated fan” type users by generating playlists that more closely mimic a band’s musical tendencies than a more generalized algorithm. In this report, we explore the music of the Jam band Phish for this purpose – who has not only a large catalog of live shows and songs, but also a very dedicated fanbase. A previous endeavor\footnote{\url{https://towardsdatascience.com/predicting-what-song-phish-will-play-next-with-deep-learning-947ccce3824d}} employed a Long Short-Term Memory (LSTM) model with Word2Vec [4] algorithm for token embeddings to achieve a ~21\% accuracy for next song prediction given a sequence of Phish songs. This paper builds upon this work by recreating it four years later and exploring the prediction task with alternate embedding methods, and RNN model architectures, and attention model architectures. 
+We purport that constructing small language models from the song sequences of live performances to generate playlists for a given band could increase the engagement of “dedicated fan” type users by generating playlists that more closely mimic a band’s musical tendencies than a more generalized algorithm. In this report, we explore the music of the Jam band Phish for this purpose – who has not only a large catalog of live shows and songs, but also a very dedicated fanbase. A previous endeavor\footnote{\url{https://towardsdatascience.com/predicting-what-song-phish-will-play-next-with-deep-learning-947ccce3824d}} employed a Long Short-Term Memory (LSTM) model with Word2Vec [4] algorithm for token embeddings to achieve a approxmately 21\% accuracy for next song prediction given a sequence of Phish songs. This paper builds upon this work by recreating it four years later and exploring the prediction task with alternate embedding methods, and RNN model architectures, and attention model architectures. 
 
 \section{Related Work}
 
-the work\footnote{\url{https://github.com/andrewrreed/phish-setlist-modeling}}
-
-We attempted to reproduce the original experiment from Nov 2019 with latest dataset (from Dec 2023). The best model (with 2 LSTM layers) identified by the author was selected and performed a grid search with 50 and 150 sequence length. None of the models from grid search performed well with the Dec 2023 dataset. The validation loss after a few epochs vanished which indicates the model was cursed with gradient exploding problem. Another interesting observation was that the model would saturate in a few epochs even with different LSTM units and dropout rates. This indicates that the model used in original experiment was overfitting the data then hence not able to generalize when tried with latest data. The highest validation accuracy observed was approx. 12\% which is less than the originally reported accuracy of 21\%.  
-
-In summary, the lesson learnt was just the sequence of songs was not enough to predict the song sequences, how more context and data is needed to obtain meaningful inference. 
+The first stage of experimentation was an attempt to reproduce the original experiment\footnote{\url{https://github.com/andrewrreed/phish-setlist-modeling}} from November 2019 with the latest setlist data from December 2023. Experiments were run for multiple model architectures, both with and without Word2Vec embedding. For both architectures, a grid search was performed with song sequence lengths of 50 and 150 with varying LSTM unit sizes and dropout rates. Although the original experiment reported the best next song accuracy of approximately 21.8\%, We were unable to reproduce these results and none of the 16 models attempted in the grid search produced satisfactory results with Dec 2023 dataset. The model without Word2Vec embedding suffered from an exploding gradient problem, and the validation accuracy quickly approached 0 after just a few training epochs. Models with Word2Vec embedding did marginally better, but would also become saturated at low validation accuracy within 4-5 training epochs. These results indicate the model used in the original experiment was overfitting the data from Nov 2019, and hence did not generalize well to the latest data. The highest validation accuracies observed were approximately 12\% for models without Word2Vec and 10\% for the models with Word2Vec embedding - both significantly less than the originally reported accuracy of 21.8\%. This highlights the difficulty of using only the unidirectional songs sequences to predict new song sequences, and  suggests more context and data is needed to obtain a more meaningful inference. This conclusion is in line with the original Author's assessment as well, and we attempt to address this in further experiments. 
 
 \section{Data Preparation}
 
@@ -107,63 +104,71 @@ These preprocessing steps refined the dataset and established a structured frame
 
 In order to mathematically interpret the song names as a language, it was necessary to tokenize the song names and separators into numerical values suitable for input into a neural network model. This was predominantly done using unigram tokens, or integer representations mapped to each full song name. In this way, each setlist is similarly decomposed into a list of integer values. 
 
-Recall, the aim of this project is to generate song sequences (IE playlists) which are representative of the style in which the band plays. This problem can be framed in terms of language modelling in either a {\it sequence-to-token} perspective, using a sequence to predict the next token, or a {\it sequence-to-sequence} perspective, using a sequence to predict the next sequence. Since the models will have to either predict the next $n^{th}$ song or the next $n$ songs, multiple data splitting techniques for input and output data were applied to evaluate the model performance under both of these paradigms. These are described below. 
-
-\paragraph{Method 1}
-The {\it sequential split} captures the immediate temporal dependencies within the songs. This approach involves a sequential splitting of the song data, where each setlist sequence is transformed into input and target sequences for training. The sequences are then padded to ensure uniform length. This method enables the model to learn and predict the next song in a sequence, essentially forecasting the playlist evolution 
-
-\paragraph{Method 2}
-The {\it time-based split} considers the evolving nature of song sequences over time. In this approach, the dataset is chronologically split into training and testing sets based on a specified date, for example '2015-12-31'. This method reflects a time-based split, capturing the temporal dynamics of song sequences. 
-
-\paragraph{Method 3}
-The {\it unified encoding approach} offers insights into the global patterns and relationships across the entire song repertoire. In this approach, the training data is like [n], [n, n+1], [n, n+1, n+2] and training labels are [n+1], [n+2], [n+3] and so on. Basically, the next song to the incoming sequence is our prediction label. 
+Recall, the aim of this project is to generate song sequences (IE playlists) which are representative of the style in which the band plays. This problem can be framed in terms of language modelling in either a {\it sequence-to-token} perspective, using a sequence to predict the next token, or a {\it sequence-to-sequence} perspective, using a sequence to predict the next sequence. Since the models will have to either predict the next $n^{th}$ song or the next $n$ songs, multiple data splitting techniques for input and output data were applied to evaluate the model performance under both of these paradigms. These splitting mechanisms are described in the following section, specific for each model. 
 
 \section{Models}
 
-Since we are dealing with the sequential aspect of the data, we are using the RNN LSTM model so that model can retain the sequential information for prediction. For experiments, we used both Uni and Bi-directional models.
+Since the language modelling is trying to find good features rooted in the sequential aspect of the data, both RNN LSTM and attention architectures were modeled so as to focus on the sequential information to make better predictions. For RNN experiments, we used both uni-directional and bi-directional models were attempted. For the attention experiments, self-attention and cross-attention were attempted. These model architectures are discussed in more detail below. 
 
-\subsection{Unidirectional LSTM with N-Dimensional Embedding}
+\subsection{Model 1: Unidirectional LSTM with N-dimensional Embedding}
 
-The initial model architectures includes an Embedding layer to represent songs numerically, two Long Short-Term Memory (LSTM) layers for capturing sequential dependencies, dropout for regularization, and a Dense layer with softmax activation for multi-class classification. The model is trained on variable-length input sequences of songs, and the Embedding layer allows it to learn meaningful representations for each song. The use of masking ensures proper handling of sequences with varying lengths. This RNN architecture aims to effectively capture the temporal patterns in the dataset, enabling it to make accurate predictions about the next song in each sequence.
+The initial model architecture first includes a trainable embedding layer to represent songs numerically as N-dimensional vectors which are then passed to two Long Short-Term Memory (LSTM) layers for capturing sequential dependencies. Dropout is used for regularization and a final Dense layer with softmax activation is used for multi-class classification. The model is trained on variable-length input sequences of songs, and the embedding layer allows it to learn meaningful representations for each song. The use of masking and padding ensures proper handling of sequences with varying lengths. 
 
-\subsection{Bidirectional LSTM with N-grams and Adjacency Matrix Embedding}
+The training sequences for this model is designed to predict either the next $n^{th}$ or $n$ songs, and so to assess the model's performance the dataset was partitioned in three distinct ways, each tailored to a specific model evaluation strategy.
 
-An N-gram sequencing approach was attempted to focus the LSTM model on the long-term sequencing of songs. Although similar to the previous sequence-to-token approach, the N-gram tokenization splits a given setlist into as many vectors as it contains songs and set markers. Each of these vectors is composed of a padded sequence of 0s and an increasing number of songs and set markers from the set list. For example: the first vector is composed of just "set-1", the next also contains the 1st song, and the next also contains the first and second song – etc. In this way, each sequence is composed of N tokens (the N-grams) which are used to predict the next target token.  
+\paragraph{Row-Level Splitting}
+A standard 80/20 split was applied at the row level, allocating 80\% of the data for training and reserving 20\% for testing. This method ensures an adequate distribution for both training and testing. 
 
-In addition to using the N-gram pre-processing technique, this method embeds the tokens using their co-occurrence matrix. This co-occurrence matrix is given by the LaPlace-smoothed adjacency matrix of the directed graph created by overlaying all the setlists as walks. In this graph, each song is a node, and each song transition contributes to a directed weighted edge.  
+\paragraph{Time-Based Splitting}
+In this approach, the dataset was chronologically split into training and testing sets using a predetermined date, e.g., '2015-12-31'. By reflecting the evolving nature of song sequences over time, this strategy enhances the model's ability to capture temporal dependencies. 
 
-Bi-directional LSTM is also employed – although the setlists are unidirectional sequences, this methodology looks for patterns more wholistically. A feed forward layer is used to compute the final output, with softmax activation. 
+\paragraph{Sequential Training Data}
+The training data was structured sequentially as [n], [n, n+1], [n, n+1, n+2], and so on, with corresponding labels as [n+1], [n+2], [n+3], and so forth. Emphasizing continuity, this method enables the model to learn and predict the sequential progression of song sequences. 
 
-\subsection{Self-Attention Model with N-d + Positional Embedding}
+\subsection{Model 2: Bidirectional LSTM on N-grams with Adjacency Matrix Embedding}
 
-In contrast to the sequence-to-token models attempted with the LSTM architectures, sequence-to-sequence models are attempted with multi-head attention architectures. These models process the song sequence inputs and targets into offset pairs, where the original sequence is broken down into 1..N-1 tokens for the input sequence and 2..N tokens for the output sequence. The token sequences are encoded into an embedding layer composed of the sum of a learned N-dimensional vector embedding layer and a positional embedding layer. The positional embedding layer applies sine and cosine functions for fixed positional encodings.  
+The next LSTM model architecture that was tried uses an {\it N-gram} sequencing approach. Although similar to other sequence-to-token approaches, the N-gram tokenization splits a given setlist into as many vectors as the setlist contains songs and set markers. Each of these vectors is composed of a padded sequence of 0s and an increasing number of songs and set markers from the setlist. For example: the first vector is composed of just "set-1", the next also contains the 1st song, and the next also contains the first and second song – etc. In this way, each sequence is composed of N tokens (the N-grams) which are used to predict the next target token. This technique focuses on the LSTM's ability to predict song sequences from positionings within a given show. 
 
-The model architecture itself is similar to the decoder-only transformer used in the GPT-2 model. It consists of a causal self-attention layer using masked multi-head attention to attend to the sequencing. This layer is added and normalized, then passed to a feed forward layer to form the Transformer block. These transformer blocks are then layered sequentially and an additional feed forward layer computes the final output, then activated by softmax. 
+In addition to this N-gram splitting technique, this method embeds the tokens using their co-occurrence matrix. This co-occurrence matrix is given by the LaPlace-smoothed adjacency matrix of the directed graph created by overlaying all the setlists as walks. In this graph, each song is a node, and each song transition contributes to a directed weighted edge. This embedding layer is not trainable and encodes long-term transition frequency data to reperesent likelihoods of choosing the next song. 
 
-\subsection{Self-Attention + Cross-Attention Model with N-d + Positional Embedding}
+The model is constructed with the special embedding layer, followed by two Bi-directional LSTM layers and a feed forward layer is used to compute the final output, with softmax activation. Although the setlists are unidirectional sequences, the bi-directional LSTM method looks for patterns more wholistically for better latent feature interpretation. 
 
-This final model is setup similarly to the original transformer model proposed in "Attention is all you need”. The sequence of songs concatenated from the previous 5 setlists are used as the context for the global self-attention layer, which is passed to the decoder via the cross-attention layer.
+\subsection{Model 3: Self-Attention Model with N-dimensional + Positional Embedding}
+
+In contrast to the sequence-to-token models attempted with the LSTM architectures, sequence-to-sequence models are attempted with multi-head attention architectures. These models process the entire song sequence for a setlist into offset pairs to form the inputs and target outputs, where the original sequence is broken down into [0,...,n-1] tokens for the input sequence and [1,...,n] tokens for the output sequence. The sequences can be any size, although sequence lengths of 125 songs performed the best. The token sequences are encoded by an embedding layer composed of the sum of a learned N-dimensional vector embedding layer and a positional embedding layer. The positional embedding layer applies sine and cosine functions for fixed positional encodings. This is the same mechanism as is used in the original attention model [5]. 
+
+The model architecture itself is similar to the decoder-only transformer used in the GPT model[6, 7]. It consists of a causal self-attention layer using masked multi-head attention to attend to the sequencing. This layer is added and normalized, then passed to a feed forward layer to form the Transformer block. These transformer blocks are then layered sequentially and an additional feed forward layer computes the final output, then activated by softmax. 
+
+\subsection{Model 4: Cross-Attention Model with N-dimendsional + Positional Embedding}
+
+This final model architecture is setup similarly to the original transformer model proposed in "Attention is All You Need” [5]. Here, a sequence of songs is concatenated from the previous 5 or more setlists to be used as the context for the global self-attention layer, which is passed to the decoder via the cross-attention layer. Inputs to be predicted upon are first sent through the causal self-attention layer as part of the decoder, before then being sent through the cross-attention layer for the given context sequence to form the transformer block. These transformer blocks are similarly layered and fed forward to compute the final output, activated by softmax to generate the multi-class probability classification. 
 
 \section{Results}
 
 Summary of the Results.
 
 \begin{table}
-	\caption{Sample table title}
+	\caption{Summary of Model Training Results}
 	\label{results-table}
 	\centering
 	\begin{tabular}{lll}
 		\toprule
-		\multicolumn{2}{c}{Part}                   \\
-		\cmidrule(r){1-2}
-		Name     & Description     & Size ($\mu$m) \\
+		Model & Best Next-Song Validation Accuracy & Generated Sequence Quality \\
 		\midrule
-		Dendrite & Input terminal  & $\sim$100     \\
-		Axon     & Output terminal & $\sim$10      \\
-		Soma     & Cell body       & up to $10^6$  \\
+		2019 Model Recreation & $\sim$12.5\% & NA\footnote{Setlist generation was not tested for the 2019 model recreation attempts.} \\
+		Model 1 & $\sim$18\% & Moderate \\
+		Model 2 & 19.5\% & Poor \\
+		Model 3 & 18.6\% & Good \\
+		Model 4 & 15.9\% & Moderate \\
 		\bottomrule
 	\end{tabular}
 \end{table}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{images/graph_attention_acc.png}
+	\caption{Validation accuracies during training for the bi-directional LSTM model (model 2; \emph{left}) and for the self-attention model (model 3; \emph{right})}
+\end{figure}
 
 \section{Discussion}
 
@@ -187,7 +192,13 @@ The code we used to acquire and process the dataset, train and evaluate our mode
 	
 	[3] K. Choi, G. Fazekas, and M. Sandler, “Towards Playlist Generation Algorithms Using RNNs Trained on Within-Track Transitions.” arXiv, 2016. doi: 10.48550/ARXIV.1606.02096. 
 	
-	[4] T. Mikolov, K. Chen, G. Corrado, and J. Dean, “Efficient Estimation of Word Representations in Vector Space.” arXiv, 2013. doi: 10.48550/ARXIV.1301.3781. 
+	[4] T. Mikolov, K. Chen, G. Corrado, and J. Dean, “Efficient Estimation of Word Representations in Vector Space.” arXiv, 2013. doi: 10.48550/ARXIV.1301.3781.
+	
+	[5] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. Kaiser, I. Polosukhin, “Attention Is All You Need.” arXiv, 2017. doi: 10.48550/ARXIV.1706.03762.
+	
+	[6] A. Radford, J. Wu, R. Child, D. Luan, D. Amodei, I. Sutskever. "Language models are unsupervised multitask learners". 2019.
+	
+	[7] A. Radford, K. Narasimhan, T. Salimans, I. Sutskever. "Improving Language Understanding by Generative Pre-Training". 2017.
 }
 
 \section{Submission of papers to NeurIPS 2023}
