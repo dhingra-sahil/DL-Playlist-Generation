@@ -145,7 +145,7 @@ This final model architecture is setup similarly to the original transformer mod
 
 \section{Results}
 
-Summary of the Results.
+For the task of predicting both the nth and the next n songs in the setlist, we conducted a comprehensive evaluation. In terms of predicting the next nth song, the model accuracies are shown in Table 1.
 
 \begin{table}
 	\caption{Summary of Model Training Results}
@@ -164,15 +164,46 @@ Summary of the Results.
 	\end{tabular}
 \end{table}
 
+The evaluation extends beyond predicting the nth song to assessing the model's capability in predicting the next n songs in the setlist. This involves comparing the original/test playlist with the seed sequence, emphasizing songs do not present in the seed. The configurable seed length and n values dictate the length of the seed sequence and the number of songs to predict, respectively. 
+
+To quantify this assessment: 
+
+- Identify songs in the original playlist excluding the seed sequence. 
+
+- Filter out songs present in custom stop-word list. 
+
+- Calculate the percentage of correctly predicted songs in the remaining playlist. 
+
+For each of the GPT, Graph Embedding, and Transformer models, the setlist used for comparison was: `['farmhouse', 'first-tube', 'twist', 'divided-sky', 'ginseng-sullivan', 'carini', 'whats-the-use', 'wildcard', 'set-2', 'down-with-disease', 'the-moma-dance', 'piper', 'fee', 'gotta-jibboo', 'saw-it-again', 'split-open-and-melt', 'cavern', 'david-bowie', 'set-e', 'the-squirming-coil', 'eos']`. A set-list of 21 songs, with 3 taken for seed, 18 songs were predicted by.  
+
+The outcome provides insights into the model's capability to extend a playlist coherently and its overall predictive performance. Below are the accuracy results from various models. 
+
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{images/graph_attention_acc.png}
 	\caption{Validation accuracies during training for the bi-directional LSTM model (model 2; \emph{left}) and for the self-attention model (model 3; \emph{right})}
 \end{figure}
 
+\begin{table}
+	\caption{Summary of Model Training Results}
+	\label{generation-table}
+	\centering
+	\begin{tabular}{lll}
+		\toprule
+		Model & Common Songs (Original \& Prediction) & Accuracy \\
+		\midrule
+		Model 2 & ['set-2', 'down-with-disease', 'set-e', 'piper', 'eos', 'the-moma-dance'] & 33.33\% \\
+		Model 3 & ['wildcard', 'set-2', 'set-e', 'david-bowie', 'cavern', 'eos'] & 33.33\% \\
+		Model 4 & ['set-e', 'wildcard', 'piper', 'the-moma-dance', 'eos', 'set-2'] & 33.33\% \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
 \section{Discussion}
 
-Discussion of what was accomplished. 
+The question is how good is this accuracy? Considering the probability of random chance, and problem set, the Bayesian probability greater than 11\% is an improvement. we expected to get further improvement on the accuracy but we didn't cross the 24\% mark. Further experiment of feeding other features as categorical data to model could possibly be a way forward, which might provide a little better insight into the playlist. In addition, having more data on genreof music, , instruments etc could have helped shape the playlist better. 
+
+These experiments were unable to reproduce the original experiment and were also unable to achieve resulting next-word accuracies exceeding those of the original experiment. However, there was some moderate success with generating song sequences in ways that could have been created by the band. In this way, certain structures of the song sequences were learned.   
 
 \section{Conclusion}
 
