@@ -135,7 +135,7 @@ The model is constructed with the special embedding layer, followed by two Bi-di
 
 \subsection{Model 3: Self-Attention Model with N-dimensional + Positional Embedding}
 
-In contrast to the sequence-to-token models attempted with the LSTM architectures, sequence-to-sequence models are attempted with multi-head attention architectures. These models process the entire song sequence for a setlist into offset pairs to form the inputs and target outputs, where the original sequence is broken down into [0,...,n-1] tokens for the input sequence and [1,...,n] tokens for the output sequence. The sequences can be any size, although sequence lengths of 125 songs performed the best. The token sequences are encoded by an embedding layer composed of the sum of a learned N-dimensional vector embedding layer and a positional embedding layer. The positional embedding layer applies sine and cosine functions for fixed positional encodings. This is the same mechanism as is used in the original attention model [5]. 
+In contrast to the sequence-to-token models attempted with the LSTM architectures, sequence-to-sequence models are attempted with multi-head attention architectures. These models process the entire song sequence for a setlist into offset pairs to form the inputs and target outputs, where the original sequence is broken down into [0, ..., $n-1$] tokens for the input sequence and [1, ..., $n$] tokens for the output sequence. The sequences can be any size, although sequence lengths of 125 songs performed the best. The token sequences are encoded by an embedding layer composed of the sum of a learned N-dimensional vector embedding layer and a positional embedding layer. The positional embedding layer applies sine and cosine functions for fixed positional encodings. This is the same mechanism as is used in the original attention model [5]. 
 
 The model architecture itself is similar to the decoder-only transformer used in the GPT model[6, 7]. It consists of a causal self-attention layer using masked multi-head attention to attend to the sequencing. This layer is added and normalized, then passed to a feed forward layer to form the Transformer block. These transformer blocks are then layered sequentially and an additional feed forward layer computes the final output, then activated by softmax. 
 
@@ -145,7 +145,13 @@ This final model architecture is setup similarly to the original transformer mod
 
 \section{Results}
 
-For the task of predicting both the nth and the next n songs in the setlist, we conducted a comprehensive evaluation. In terms of predicting the next nth song, the model accuracies are shown in Table 1.
+The models were described in the previous section were trained for durations deemed appropriate based on stabilization of the validation accuracy for predicting the next song, and were tested for a variety of hyperparameter combinations. Training and Validation accuracy for Models 2 and 3 are shown in Figure 1, while Table 1 compares the best next song prediction validation accuracy for each model, and the results of the recreated 2019 model.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{images/graph_attention_acc.png}
+	\caption{Validation accuracies during training for the Bi-Directional LSTM model (Model 2; \emph{left}) and for the Self-Attention model (Model 3; \emph{right}).}
+\end{figure}
 
 \begin{table}
 	\caption{Summary of Model Training Results}
@@ -156,33 +162,25 @@ For the task of predicting both the nth and the next n songs in the setlist, we 
 		Model & Best Next-Song Validation Accuracy & Generated Sequence Quality \\
 		\midrule
 		2019 Model Recreation & $\sim$12.5\% & NA\footnote{Setlist generation was not tested for the 2019 model recreation attempts.} \\
-		Model 1 & $\sim$18\% & Moderate \\
-		Model 2 & 19.5\% & Poor \\
-		Model 3 & 18.6\% & Good \\
-		Model 4 & 15.9\% & Moderate \\
+		Model 1 & $\sim$18\% & Poor \\
+		Model 2 & 19.5\% & Moderate \\
+		Model 3 & 19.0\% & Moderate \\
+		Model 4 & 16.8\% & Good \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-The evaluation extends beyond predicting the nth song to assessing the model's capability in predicting the next n songs in the setlist. This involves comparing the original/test playlist with the seed sequence, emphasizing songs do not present in the seed. The configurable seed length and n values dictate the length of the seed sequence and the number of songs to predict, respectively. 
+All of the new models were able to outperform the recreated 2019 model in terms of next song accuracy, although the sequences that they generated were of varying degrees of quality. For example, Model 1 was able to predict a sequence of songs without repeats, but was not able to predict part-of-speech separators like 'set-1' or 'eos'. In contrast, Model 2 was able to predict part-of-speech separators but was unable to always do this in a way that made sense. It also missed many common sequential orderings of songs like 'The Horse' into 'Silent in the Morning'. Model 3 had better predictions for part-of-speech separators which were all sensical, although it repeated and alternated songs often. The band sometimes does this during shows so it is not an outlandish prediction, but Model 3 does this a little \emph{too} often to be considered a good prediction. Model 4 generated the best predictions with good placements for the part-of-speech separators and few repeated songs, despite it's lower next song accuracy compared to models 2 and 3. 
 
-To quantify this assessment: 
+Another evaluation method extends beyond predicting the $n^{th}$ song and instead assesses the model's capability to predict the next $n$ songs, or its accuracy in predicting the next sequence. To do this, Models 2, 3, and 4 were fed a seed sequence of a few songs from the beginning of a longer test setlist. Then the results of the model predictions from the seed sequence were compared to the actual next songs \emph{irrespective of song order}. 
 
-- Identify songs in the original playlist excluding the seed sequence. 
+For each model, the setlist used for comparison was: 
 
-- Filter out songs present in custom stop-word list. 
+\begin{center}
+	['farmhouse', 'first-tube', 'twist', 'divided-sky', 'ginseng-sullivan', 'carini', 'whats-the-use', 'wildcard', 'set-2', 'down-with-disease', 'the-moma-dance', 'piper', 'fee', 'gotta-jibboo', 'saw-it-again', 'split-open-and-melt', 'cavern', 'david-bowie', 'set-e', 'the-squirming-coil', 'eos']
+\end{center}
 
-- Calculate the percentage of correctly predicted songs in the remaining playlist. 
-
-For each of the GPT, Graph Embedding, and Transformer models, the setlist used for comparison was: `['farmhouse', 'first-tube', 'twist', 'divided-sky', 'ginseng-sullivan', 'carini', 'whats-the-use', 'wildcard', 'set-2', 'down-with-disease', 'the-moma-dance', 'piper', 'fee', 'gotta-jibboo', 'saw-it-again', 'split-open-and-melt', 'cavern', 'david-bowie', 'set-e', 'the-squirming-coil', 'eos']`. A set-list of 21 songs, with 3 taken for seed, 18 songs were predicted by.  
-
-The outcome provides insights into the model's capability to extend a playlist coherently and its overall predictive performance. Below are the accuracy results from various models. 
-
-\begin{figure}
-	\centering
-	\includegraphics[width=\textwidth]{images/graph_attention_acc.png}
-	\caption{Validation accuracies during training for the bi-directional LSTM model (model 2; \emph{left}) and for the self-attention model (model 3; \emph{right})}
-\end{figure}
+Table 2 shows the results of this exercise. Models 2, 3, and 4 were all able to achieve similar accuracies in this regard. They all correctly predicted part-of-speech separators which would be used, and were able to predict a few songs which would appear in the next setlist. 
 
 \begin{table}
 	\caption{Summary of Model Training Results}
